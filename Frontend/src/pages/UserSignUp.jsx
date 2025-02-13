@@ -1,6 +1,9 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
-import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useState, useContext } from 'react'
+import axios from 'axios'
+import { UserDataContext } from '../context/UserContext'
+
 const UserSignUp = () => {
   const [ email, setEmail ] = useState('')
   const [ password, setPassword ] = useState('')
@@ -8,18 +11,40 @@ const UserSignUp = () => {
   const [ lastName, setLastName ] = useState('')
   const [ userData, setUserData ] = useState({})
 
-  const submitHandler = (e) => {
-    e.preventDefault()
-    setUserData({
-      fullName: {
-        firstName: firstName,
-        lastName: lastName,
+  const navigate = useNavigate();
+  const { user, setUser } = useContext(UserDataContext)
 
-      },
-      email: email,
-      password: password
-    })
-    console.log(userData);
+  const submitHandler = async (e) => {
+    e.preventDefault()
+    // setUserData({
+    //   fullName: {
+    //     firstName: firstName,
+    //     lastName: lastName,
+
+    //   },
+    //   email: email,
+    //   password: password
+    // })
+    const newUser = {
+      fullname: {
+            firstname: firstName,
+            lastname: lastName,
+    
+          },
+          email: email,
+          password: password
+    }
+    const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/users/register`, newUser);
+
+    if(response.status === 201){
+      const data = response.data;
+      console.log(data);
+      localStorage.setItem('token', data.token)
+      setUser(data.user)
+      
+      navigate('/home')
+    }
+    // console.log(userData);
     setEmail('');
     setFirstName('');
     setLastName('');
@@ -35,7 +60,7 @@ const UserSignUp = () => {
             submitHandler(e)
           }}>
 
-            <h3 className='text-lg w-1/2  font-medium mb-2'>What's your name</h3>
+            <h3 className='text-lg w-full  font-medium mb-2'>What's your name</h3>
             <div className='flex gap-4 mb-7'>
               <input
                 required
