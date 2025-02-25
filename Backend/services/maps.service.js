@@ -52,8 +52,13 @@ module.exports.getDistanceTime = async (origin, destination) => {
     try {
 
 
+        
         const response = await axios.get(url);
-        if (response.data.status === 'OK' && response.data.routes.length > 0) {
+        //await new Promise((resolve) => setTimeout(resolve, 1000));
+        console.log("STATUS:", response.data?.status);
+        
+        //console.log(response.data.routes.length);
+        if (response.data.status === 'OK' && response.data.routes?.length > 0) {
             const leg = response.data.routes[0].legs[0];
             return {
                 
@@ -68,11 +73,12 @@ module.exports.getDistanceTime = async (origin, destination) => {
                 status: "OK"
             };
         } else {
+           
             throw new Error('Unable to fetch distance and time');
         }
 
     } catch (err) {
-        console.error(err);
+        console.error(err, "ERROR");
         throw err;
     }
 }
