@@ -1,34 +1,38 @@
 const axios = require('axios');
-
+//const caltainModel = require('../models/captain.model');
+const captainModel = require('../models/captain.model');
 module.exports.getAddressCoordinate = async (address) => {
+    console.log(address, "ADDRESS");
     const apiKey = process.env.GOOGLE_MAPS_API;
-    const [origin, destination] = address.split(' to ');
+    //const [origin, destination] = address.split(' to ');
 
-    console.log(origin, destination);
+    
 
-    const url = `https://maps.gomaps.pro/maps/api/directions/json?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&key=${apiKey}`;
+    const url = `https://maps.gomaps.pro/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
 
     try {
         const response = await axios.get(url);
-        console.log(response.data);
+        console.log(response.data?.status, "RESDATA");
+        console.log(response.data.routes?.length, "LENGTH");
 
-        if (response.data.status === 'OK' && response.data.routes.length > 0) {
+        //if (response.data.status === 'OK' && response.data.routes?.length > 0) {// THIS ROUTES.ELNGTH WILL NOT WORK WITH GEOLOCATION
             // Extracting coordinates directly from the directions response
-            const originCoords = response.data.routes[0].legs[0].start_location;
-            const destinationCoords = response.data.routes[0].legs[0].end_location;
+            // const originCoords = response.data.routes[0].legs[0].start_location;
+            // const destinationCoords = response.data.routes[0].legs[0].end_location;
 
-            console.log('Origin Coordinates:', originCoords);
-            console.log('Destination Coordinates:', destinationCoords);
+            // console.log('Origin Coordinates:', originCoords);
+            // console.log('Destination Coordinates:', destinationCoords);
+            if(response.data.status === 'OK'){
+            const location = response.data.results[0].geometry.location;
+
+            console.log('Coordinates:', location);
 
             return {
-                origin: {
-                    lat: originCoords.lat,
-                    lng: originCoords.lng
-                },
-                destination: {
-                    lat: destinationCoords.lat,
-                    lng: destinationCoords.lng
-                }
+                
+                    ltd: location.lat,
+                    lng: location.lng
+                
+                
             };
         } else {
             throw new Error('Unable to fetch coordinates');
@@ -38,6 +42,20 @@ module.exports.getAddressCoordinate = async (address) => {
         throw error;
     }
 };
+
+
+module.exports.getCaptainsInTheRadius = async (ltd, lng, radius) => {
+    console.log("HELLO")
+    const captains = await captainModel.find({
+        location: {
+            $geoWithin: {
+                $centerSphere: [[ltd, lng], radius / 6371]
+            }
+        }
+    })
+    console.log(captains, "CAPTAINS");
+    return captains;
+}
 
 
 module.exports.getDistanceTime = async (origin, destination) => {
